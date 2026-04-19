@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Желание — благотворительный сервис</title>
+<style>
+  :root {
+    --bg: #F5F4F0;
+    --white: #FFFFFF;
+    --blue: #1B3A6B;
+    --blue-light: #2A5298;
+    --blue-soft: #E8EEF8;
+    --teal: #0E8A7A;
+    --teal-light: #E0F5F2;
+    --green: #2ECC8A;
+    --green-light: #E6F9F1;
+    --amber: #F5A623;
+    --amber-light: #FFF4E0;
+    --gray-100: #F8F8F6;
+    --gray-200: #EEEDE9;
+    --gray-300: #D5D3CC;
+    --gray-400: #9B9892;
+    --gray-500: #6B6762;
+    --gray-700: #3D3B37;
+    --gray-900: #1A1917;
+    --red: #E53935;
+    --shadow-sm: 0 1px 4px rgba(0,0,0,.06), 0 2px 8px rgba(0,0,0,.04);
+    --shadow-md: 0 4px 16px rgba(0,0,0,.08), 0 1px 4px rgba(0,0,0,.04);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,.10), 0 2px 8px rgba(0,0,0,.06);
+    --radius-sm: 12px;
+    --radius-md: 20px;
+    --radius-lg: 28px;
+    --radius-full: 999px;
+    --font: -apple-system, 'Inter', 'Segoe UI', sans-serif;
+    --transition: all .22s cubic-bezier(.4,0,.2,1);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { font-size: 16px; scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--gray-900);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 0;
+  }
+
+  /* ── APP SHELL ── */
+  #app-shell {
+    width: 100%;
+    max-width: 420px;
+    min-height: 100vh;
+    background: var(--white);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+
+  @media (min-width: 900px) {
+    body { padding: 40px 20px; align-items: center; justify-content: flex-start; }
+    #app-shell {
+      min-height: auto;
+      height: 840px;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+    }
+  }
+
+  .screen {
+    display: none;
+    flex-direction: column;
+    flex: 1;
+    overflow-y: auto;
+    animation: fadeSlideIn .3s ease both;
+  }
+  .screen.active { display: flex; }
+
+  @keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; } to { opacity: 1; }
+  }
+  @keyframes slideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+  }
+  @keyframes scaleIn {
+    from { transform: scale(.9); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+  }
+  @keyframes checkmark {
+    from { stroke-dashoffset: 50; }
+    to   { stroke-dashoffset: 0; }
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.5;} }
+
+  /* ── HEADER / NAV ── */
+  .top-bar {
+    display: flex;
+    align-items: center;
+    padding: 16px 20px 12px;
+    gap: 12px;
+    flex-shrink: 0;
+    background: var(--white);
+    border-bottom: 1px solid var(--gray-200);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .top-bar .logo-mark {
+    width: 32px; height: 32px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--blue) 0%, var(--teal) 100%);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .top-bar .logo-mark span { color: #fff; font-size: 14px; font-weight: 700; }
+  .top-bar .title { font-size: 17px; font-weight: 700; color: var(--gray-900); flex: 1; }
+  .back-btn {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: var(--gray-100); border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: var(--transition); flex-shrink: 0;
+    color: var(--gray-700);
+  }
+  .back-btn:hover { background: var(--gray-200); }
+  .back-btn svg { width: 18px; height: 18px; }
+
+  /* ── SCROLLABLE BODY ── */
+  .screen-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .screen-body::-webkit-scrollbar { width: 4px; }
+  .screen-body::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 4px; }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: 8px; padding: 14px 24px; border-radius: var(--radius-full);
+    font-size: 15px; font-weight: 600; border: none; cursor: pointer;
+    transition: var(--transition); line-height: 1.2; text-align: center;
+    letter-spacing: -.01em;
+  }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-primary {
+    background: var(--blue); color: #fff;
+    box-shadow: 0 2px 12px rgba(27,58,107,.25);
+  }
+  .btn-primary:hover:not(:disabled) { background: var(--blue-light); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(27,58,107,.3); }
+  .btn-primary:active:not(:disabled) { transform: translateY(0); }
+  .btn-teal { background: var(--teal); color: #fff; box-shadow: 0 2px 12px rgba(14,138,122,.25); }
+  .btn-teal:hover:not(:disabled) { background: #0a7a6c; transform: translateY(-1px); }
+  .btn-outline {
+    background: var(--white); color: var(--blue);
+    border: 1.5px solid var(--blue); box-shadow: none;
+  }
+  .btn-outline:hover:not(:disabled) { background: var(--blue-soft); }
+  .btn-ghost { background: var(--gray-100); color: var(--gray-700); }
+  .btn-ghost:hover:not(:disabled) { background: var(--gray-200); }
+  .btn-full { width: 100%; }
+  .btn-sm { padding: 9px 16px; font-size: 13px; }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    padding: 18px;
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition);
+  }
+  .card:hover { box-shadow: var(--shadow-md); border-color: var(--gray-300); }
+  .card.selected { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(27,58,107,.12); }
+
+  /* ── BADGES ── */
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 10px; border-radius: var(--radius-full);
+    font-size: 11px; font-weight: 600; letter-spacing: .02em;
+  }
+  .badge-blue { background: var(--blue-soft); color: var(--blue); }
+  .badge-teal { background: var(--teal-light); color: var(--teal); }
+  .badge-green { background: var(--green-light); color: #1a8a5a; }
+  .badge-amber { background: var(--amber-light); color: #a07000; }
+  .badge-gray { background: var(--gray-100); color: var(--gray-500); }
+
+  /* ── FORM ELEMENTS ── */
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-label { font-size: 13px; font-weight: 600; color: var(--gray-700); }
+  .form-input, .form-select, .form-textarea {
+    padding: 12px 14px; border: 1.5px solid var(--gray-300);
+    border-radius: var(--radius-sm); font-size: 15px; font-family: var(--font);
+    color: var(--gray-900); background: var(--white);
+    transition: var(--transition); outline: none;
+    -webkit-appearance: none;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    border-color: var(--blue); box-shadow: 0 0 0 3px rgba(27,58,107,.1);
+  }
+  .form-input.error, .form-select.error { border-color: var(--red); }
+  .form-textarea { min-height: 90px; resize: vertical; }
+  .form-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236B6762' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; cursor: pointer; }
+  .error-msg { font-size: 12px; color: var(--red); margin-top: 2px; display: none; }
+  .error-msg.show { display: block; }
+
+  /* ── SEGMENTED BUTTONS ── */
+  .seg-group { display: flex; gap: 8px; flex-wrap: wrap; }
+  .seg-btn {
+    padding: 8px 14px; border-radius: var(--radius-full);
+    font-size: 13px; font-weight: 600; border: 1.5px solid var(--gray-300);
+    background: var(--white); color: var(--gray-700); cursor: pointer; transition: var(--transition);
+  }
+  .seg-btn:hover { border-color: var(--blue); color: var(--blue); }
+  .seg-btn.active { border-color: var(--blue); background: var(--blue); color: #fff; }
+
+  /* ── CHIP FILTERS ── */
+  .chips { display: flex; gap: 8px; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip {
+    padding: 8px 16px; border-radius: var(--radius-full);
+    font-size: 13px; font-weight: 600; border: 1.5px solid var(--gray-300);
+    background: var(--white); color: var(--gray-700); cursor: pointer;
+    transition: var(--transition); white-space: nowrap; flex-shrink: 0;
+  }
+  .chip:hover { border-color: var(--blue); color: var(--blue); }
+  .chip.active { border-color: var(--blue); background: var(--blue); color: #fff; }
+
+  /* ── PROGRESS BAR ── */
+  .progress-bar-wrap {
+    background: var(--gray-200); border-radius: var(--radius-full);
+    height: 4px; overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%; border-radius: var(--radius-full);
+    background: linear-gradient(90deg, var(--blue) 0%, var(--teal) 100%);
+    transition: width .5s ease;
+  }
+  .progress-steps { display: flex; justify-content: space-between; font-size: 11px; color: var(--gray-400); margin-top: 4px; }
+
+  /* ── TIMELINE ── */
+  .timeline { display: flex; flex-direction: column; gap: 0; }
+  .timeline-item {
+    display: flex; gap: 14px; align-items: flex-start;
+    padding-bottom: 20px; position: relative;
+  }
+  .timeline-item:last-child { padding-bottom: 0; }
+  .timeline-item:last-child .tl-line { display: none; }
+  .tl-icon-wrap { position: relative; flex-shrink: 0; width: 32px; display: flex; flex-direction: column; align-items: center; }
+  .tl-icon {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--gray-200); color: var(--gray-400);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; transition: var(--transition); z-index: 1;
+  }
+  .tl-icon.done { background: var(--green); color: #fff; }
+  .tl-icon.active { background: var(--blue); color: #fff; box-shadow: 0 0 0 4px rgba(27,58,107,.15); }
+  .tl-icon.spin-anim { animation: spin 1s linear infinite; background: var(--blue-soft); }
+  .tl-line {
+    position: absolute; top: 32px; left: 50%;
+    transform: translateX(-50%);
+    width: 2px; height: calc(100% - 0px);
+    background: var(--gray-200); z-index: 0;
+  }
+  .tl-line.done { background: var(--green); }
+  .tl-content { flex: 1; padding-top: 6px; }
+  .tl-label { font-size: 14px; font-weight: 600; color: var(--gray-900); }
+  .tl-label.dim { color: var(--gray-400); font-weight: 500; }
+  .tl-sub { font-size: 12px; color: var(--gray-400); margin-top: 2px; }
+
+  /* ── WISH CARD ── */
+  .wish-card {
+    background: var(--white); border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius-md); padding: 16px;
+    box-shadow: var(--shadow-sm); transition: var(--transition); cursor: pointer;
+  }
+  .wish-card:hover { box-shadow: var(--shadow-md); border-color: var(--gray-300); transform: translateY(-2px); }
+  .wish-card-top { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 12px; }
+  .wish-avatar {
+    width: 44px; height: 44px; border-radius: 14px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 700; color: #fff;
+  }
+  .wish-card-meta { flex: 1; min-width: 0; }
+  .wish-card-name { font-size: 15px; font-weight: 700; color: var(--gray-900); }
+  .wish-card-sub { font-size: 12px; color: var(--gray-500); margin-top: 1px; }
+  .wish-card-desc { font-size: 13px; color: var(--gray-700); line-height: 1.5; margin-bottom: 10px; }
+  .wish-card-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .wish-price { font-size: 15px; font-weight: 700; color: var(--blue); }
+
+  /* ── SEARCH ── */
+  .search-wrap { position: relative; }
+  .search-wrap svg { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--gray-400); }
+  .search-input { padding-left: 38px !important; }
+
+  /* ── PAYMENT METHOD ── */
+  .pay-option {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 16px; border: 1.5px solid var(--gray-300);
+    border-radius: var(--radius-md); cursor: pointer; transition: var(--transition);
+    background: var(--white);
+  }
+  .pay-option:hover { border-color: var(--blue); }
+  .pay-option.selected { border-color: var(--blue); background: var(--blue-soft); }
+  .pay-option-icon { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+  .pay-option-label { flex: 1; font-size: 15px; font-weight: 600; color: var(--gray-900); }
+  .pay-radio {
+    width: 20px; height: 20px; border-radius: 50%;
+    border: 2px solid var(--gray-300); transition: var(--transition);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .pay-option.selected .pay-radio { border-color: var(--blue); background: var(--blue); }
+  .pay-option.selected .pay-radio::after { content: ''; width: 8px; height: 8px; border-radius: 50%; background: #fff; }
+
+  /* ── TOGGLE ── */
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .toggle-label { font-size: 14px; color: var(--gray-700); flex: 1; }
+  .toggle {
+    width: 44px; height: 26px; border-radius: var(--radius-full);
+    background: var(--gray-300); cursor: pointer; position: relative;
+    transition: var(--transition); flex-shrink: 0; border: none;
+  }
+  .toggle.on { background: var(--blue); }
+  .toggle::after {
+    content: ''; width: 20px; height: 20px; border-radius: 50%; background: #fff;
+    position: absolute; top: 3px; left: 3px; transition: var(--transition);
+    box-shadow: 0 1px 4px rgba(0,0,0,.2);
+  }
+  .toggle.on::after { left: 21px; }
+
+  /* ── TRUST CHIPS ── */
+  .trust-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .trust-chip {
+    display: flex; align-items: center; gap: 6px; padding: 8px 12px;
+    background: var(--gray-100); border-radius: var(--radius-full);
+    font-size: 12px; font-weight: 600; color: var(--gray-700);
+    border: 1px solid var(--gray-200);
+  }
+
+  /* ── TRANSPARENCY BLOCK ── */
+  .transp-block { background: var(--blue-soft); border-radius: var(--radius-md); padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+  .transp-row { display: flex; align-items: center; gap: 10px; }
+  .transp-icon { width: 28px; height: 28px; border-radius: 8px; background: var(--white); display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+  .transp-text { font-size: 13px; font-weight: 600; color: var(--blue); }
+
+  /* ── RESULT ── */
+  .result-hero {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 28px 20px 0; text-align: center; gap: 12px;
+  }
+  .check-circle {
+    width: 72px; height: 72px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--green) 0%, var(--teal) 100%);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 8px 24px rgba(46,204,138,.3);
+    animation: scaleIn .5s cubic-bezier(.34,1.56,.64,1) both;
+  }
+  .check-circle svg { width: 36px; height: 36px; }
+  .check-circle svg path {
+    stroke-dasharray: 50; stroke-dashoffset: 50;
+    animation: checkmark .5s ease .3s forwards;
+  }
+
+  /* ── SPINNER ── */
+  .spinner {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 2.5px solid rgba(255,255,255,.3);
+    border-top-color: #fff;
+    animation: spin .8s linear infinite;
+  }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.5);
+    display: flex; align-items: flex-end; justify-content: center;
+    z-index: 100; animation: fadeIn .2s ease;
+    padding: 0;
+  }
+  .modal-overlay.hidden { display: none; }
+  .modal-box {
+    background: var(--white); border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    padding: 24px 20px 32px; width: 100%; max-width: 420px;
+    animation: slideUp .3s ease;
+  }
+  @media (min-width: 900px) {
+    .modal-overlay { align-items: center; }
+    .modal-box { border-radius: var(--radius-lg); max-height: 80vh; overflow-y: auto; }
+  }
+  .modal-handle { width: 36px; height: 4px; background: var(--gray-300); border-radius: 2px; margin: 0 auto 20px; }
+  .modal-close {
+    position: absolute; top: 16px; right: 16px;
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--gray-100); border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--gray-500);
+  }
+
+  /* ── SECTION LABEL ── */
+  .section-label { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--gray-400); }
+
+  /* ── DIVIDER ── */
+  .divider { height: 1px; background: var(--gray-200); border: none; margin: 4px 0; }
+
+  /* ── PRODUCT CARD ── */
+  .product-card {
+    background: linear-gradient(135deg, var(--blue-soft) 0%, var(--teal-light) 100%);
+    border: 1.5px solid rgba(27,58,107,.12); border-radius: var(--radius-md); padding: 16px;
+  }
+  .product-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+  .product-icon { width: 48px; height: 48px; border-radius: 14px; background: var(--white); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; box-shadow: var(--shadow-sm); }
+  .product-name { font-size: 15px; font-weight: 700; color: var(--gray-900); }
+  .product-desc { font-size: 12px; color: var(--gray-500); margin-top: 2px; line-height: 1.4; }
+  .product-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+  .product-price { font-size: 18px; font-weight: 800; color: var(--blue); }
+  .marketplace-badge { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; color: var(--teal); background: var(--white); padding: 4px 10px; border-radius: var(--radius-full); }
+
+  /* ── COLORS FOR AVATARS ── */
+  .av-blue { background: linear-gradient(135deg, #1B3A6B, #2A5298); }
+  .av-teal { background: linear-gradient(135deg, #0E8A7A, #1AB8A8); }
+  .av-amber { background: linear-gradient(135deg, #E67E22, #F5A623); }
+  .av-violet { background: linear-gradient(135deg, #7B2FBE, #A855F7); }
+  .av-rose { background: linear-gradient(135deg, #E84393, #F472B6); }
+  .av-green { background: linear-gradient(135deg, #16A34A, #2ECC8A); }
+
+  /* ── WELCOME ── */
+  #screen-welcome .hero-block {
+    background: linear-gradient(160deg, var(--blue) 0%, var(--teal) 100%);
+    padding: 36px 24px 28px;
+    display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px;
+    flex-shrink: 0;
+  }
+  .hero-logo { width: 56px; height: 56px; border-radius: 18px; background: rgba(255,255,255,.2); display: flex; align-items: center; justify-content: center; margin-bottom: 4px; }
+  .hero-logo span { color: #fff; font-size: 24px; font-weight: 800; }
+  .hero-title { font-size: 26px; font-weight: 800; color: #fff; letter-spacing: -.02em; line-height: 1.15; }
+  .hero-subtitle { font-size: 14px; color: rgba(255,255,255,.8); line-height: 1.5; max-width: 280px; }
+
+  .role-card {
+    border: 2px solid var(--gray-200); border-radius: var(--radius-md);
+    padding: 20px; cursor: pointer; transition: var(--transition);
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .role-card:hover { border-color: var(--blue); box-shadow: var(--shadow-md); transform: translateY(-2px); }
+  .role-card-icon { font-size: 28px; margin-bottom: 4px; }
+  .role-card-title { font-size: 16px; font-weight: 700; color: var(--gray-900); }
+  .role-card-sub { font-size: 13px; color: var(--gray-500); line-height: 1.4; }
+  .role-card.donor .role-card-title { color: var(--blue); }
+  .role-card.wisher .role-card-title { color: var(--teal); }
+
+  /* ── MISC ── */
+  .info-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--gray-200); }
+  .info-row:last-child { border-bottom: none; }
+  .info-label { font-size: 13px; color: var(--gray-500); }
+  .info-value { font-size: 14px; font-weight: 600; color: var(--gray-900); text-align: right; max-width: 60%; }
+  .total-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 0 0; }
+  .total-label { font-size: 16px; font-weight: 700; color: var(--gray-900); }
+  .total-value { font-size: 20px; font-weight: 800; color: var(--blue); }
+
+  .success-banner {
+    background: linear-gradient(135deg, var(--green) 0%, var(--teal) 100%);
+    border-radius: var(--radius-md); padding: 16px 20px;
+    display: flex; align-items: center; gap: 12px;
+    color: #fff;
+  }
+  .success-banner-icon { font-size: 24px; }
+  .success-banner-title { font-size: 16px; font-weight: 700; }
+  .success-banner-sub { font-size: 12px; opacity: .85; margin-top: 1px; }
+
+  .gratitude-card {
+    background: linear-gradient(135deg, var(--amber-light) 0%, #FFF8E7 100%);
+    border: 1.5px solid var(--amber); border-radius: var(--radius-md); padding: 18px;
+  }
+  .gratitude-title { font-size: 15px; font-weight: 700; color: #7A5200; margin-bottom: 6px; }
+  .gratitude-msg { font-size: 13px; color: #5A3C00; line-height: 1.5; font-style: italic; margin-bottom: 14px; }
+
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--gray-400); }
+  .empty-state-icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-state-text { font-size: 14px; }
+
+  .anim-stagger > * { animation: slideUp .35s ease both; }
+  .anim-stagger > *:nth-child(1) { animation-delay: .05s; }
+  .anim-stagger > *:nth-child(2) { animation-delay: .1s; }
+  .anim-stagger > *:nth-child(3) { animation-delay: .15s; }
+  .anim-stagger > *:nth-child(4) { animation-delay: .2s; }
+  .anim-stagger > *:nth-child(5) { animation-delay: .25s; }
+  .anim-stagger > *:nth-child(6) { animation-delay: .3s; }
+
+  .bottom-actions { padding: 16px 20px 20px; display: flex; flex-direction: column; gap: 10px; flex-shrink: 0; border-top: 1px solid var(--gray-200); background: var(--white); }
+  .bottom-actions.no-border { border-top: none; }
+
+  .form-step-indicator { font-size: 12px; font-weight: 600; color: var(--gray-400); text-align: right; }
+
+  .moderation-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--amber-light); color: #7A5200; padding: 6px 12px; border-radius: var(--radius-full); font-size: 12px; font-weight: 600; animation: pulse 1.5s ease infinite; }
+  .moderation-badge.done { background: var(--green-light); color: #1a8a5a; animation: none; }
+</style>
+</head>
+<body>
+<div id="app-shell">
+
+  <!-- ══════════════════ SCREEN 1: WELCOME ══════════════════ -->
+  <div id="screen-welcome" class="screen active">
+    <div class="hero-block">
+      <div class="hero-logo"><span>✦</span></div>
+      <div class="hero-title">Исполни желание</div>
+      <div class="hero-subtitle">Прозрачная благотворительность: вы видите конкретного ребёнка, конкретный подарок и результат доставки</div>
+    </div>
+    <div class="screen-body anim-stagger">
+      <div class="trust-chips">
+        <div class="trust-chip">✓ Проверенные желания</div>
+        <div class="trust-chip">🛍 Оплата конкретного товара</div>
+        <div class="trust-chip">📦 Доставка под контролем команды</div>
+      </div>
+
+      <div class="section-label" style="margin-top:4px">Выберите роль</div>
+
+      <div class="role-card donor" onclick="startDonor()">
+        <div class="role-card-icon">🎁</div>
+        <div class="role-card-title">Я хочу исполнить желание</div>
+        <div class="role-card-sub">Выберите ребёнка из каталога и оплатите конкретный подарок — мы всё доставим</div>
+      </div>
+
+      <div class="role-card wisher" onclick="startWisher()">
+        <div class="role-card-icon">⭐</div>
+        <div class="role-card-title">Я хочу добавить желание</div>
+        <div class="role-card-sub">Расскажите, что нужно ребёнку — мы проверим заявку и найдём дарителя</div>
+      </div>
+
+      <div style="text-align:center; padding: 8px 0 4px;">
+        <div style="font-size:12px; color: var(--gray-400);">Уже исполнено <strong style="color:var(--blue)">1 247</strong> желаний · Рейтинг <strong style="color:var(--amber)">4.97 ★</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ SCREEN 2: WISH CREATION ══════════════════ -->
+  <div id="screen-create" class="screen">
+    <div class="top-bar">
+      <button class="back-btn" onclick="goTo('welcome')" aria-label="Назад">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M5 12l7-7M5 12l7 7"/></svg>
+      </button>
+      <span class="title">Добавить желание</span>
+      <span class="form-step-indicator">Шаг 1 из 1</span>
+    </div>
+    <div class="screen-body">
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" id="create-progress" style="width:0%"></div></div>
+
+      <div class="card" style="padding:20px; display:flex; flex-direction:column; gap:16px;" id="wish-form-card">
+        <div class="form-group">
+          <label class="form-label" for="f-name">Имя ребёнка *</label>
+          <input class="form-input" id="f-name" type="text" placeholder="Например, Маша" oninput="updateProgress()">
+          <span class="error-msg" id="err-name">Введите имя</span>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label class="form-label" for="f-age">Возраст *</label>
+            <input class="form-input" id="f-age" type="number" min="1" max="17" placeholder="7" oninput="updateProgress()">
+            <span class="error-msg" id="err-age">Укажите возраст</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="f-city">Город *</label>
+            <input class="form-input" id="f-city" type="text" placeholder="Москва" oninput="updateProgress()">
+            <span class="error-msg" id="err-city">Укажите город</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="f-category">Категория подарка *</label>
+          <select class="form-select" id="f-category" onchange="updateProgress()">
+            <option value="">Выберите категорию</option>
+            <option value="творчество">🎨 Творчество</option>
+            <option value="спорт">⚽ Спорт</option>
+            <option value="обучение">📚 Обучение</option>
+            <option value="игры">🎮 Игры</option>
+            <option value="одежда">👕 Одежда</option>
+            <option value="другое">✨ Другое</option>
+          </select>
+          <span class="error-msg" id="err-category">Выберите категорию</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="f-wish">Что ребёнок хочет получить? *</label>
+          <input class="form-input" id="f-wish" type="text" placeholder="Например, набор для рисования" oninput="updateProgress()">
+          <span class="error-msg" id="err-wish">Опишите желание</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="f-reason">Почему это важно?</label>
+          <textarea class="form-textarea" id="f-reason" placeholder="Расскажите немного о ребёнке и почему этот подарок важен для него..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Комфортный бюджет *</label>
+          <div class="seg-group" id="budget-group">
+            <button class="seg-btn" data-val="1000" onclick="selectBudget(this)">до 1 000 ₽</button>
+            <button class="seg-btn" data-val="3000" onclick="selectBudget(this)">до 3 000 ₽</button>
+            <button class="seg-btn" data-val="5000" onclick="selectBudget(this)">до 5 000 ₽</button>
+            <button class="seg-btn" data-val="10000" onclick="selectBudget(this)">до 10 000 ₽</button>
+          </div>
+          <span class="error-msg" id="err-budget">Выберите бюджет</span>
+        </div>
+        <label style="display:flex; align-items:flex-start; gap:10px; cursor:pointer;">
+          <input type="checkbox" id="f-gratitude" style="width:18px; height:18px; margin-top:2px; accent-color:var(--blue); cursor:pointer; flex-shrink:0;">
+          <span style="font-size:13px; color:var(--gray-700); line-height:1.5;">Ребёнок хочет передать благодарность дарителю (сообщение после получения подарка)</span>
+        </label>
+      </div>
+    </div>
+    <div class="bottom-actions">
+      <button class="btn btn-teal btn-full" onclick="submitWish()">Отправить желание ✦</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════ SCREEN 3: MODERATION ══════════════════ -->
+  <div id="screen-moderation" class="screen">
+    <div class="top-bar">
+      <button class="back-btn" onclick="goTo('create')" aria-label="Назад">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M5 12l7-7M5 12l7 7"/></svg>
+      </button>
+      <span class="title">Статус заявки</span>
+    </div>
+    <div class="screen-body anim-stagger">
+      <div class="card">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+          <div style="font-size:15px; font-weight:700;">Желание отправлено</div>
+          <div class="moderation-badge" id="mod-badge">⏳ Проверяем</div>
+        </div>
+        <div class="timeline" id="mod-timeline">
+          <div class="timeline-item">
+            <div class="tl-icon-wrap">
+              <div class="tl-icon done" id="tl-mod-0">✓</div>
+              <div class="tl-line done" id="tl-line-0"></div>
+            </div>
+            <div class="tl-content">
+              <div class="tl-label">Желание отправлено</div>
+              <div class="tl-sub" id="tl-sub-0">Получено командой проекта</div>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="tl-icon-wrap">
+              <div class="tl-icon" id="tl-mod-1">2</div>
+              <div class="tl-line" id="tl-line-1"></div>
+            </div>
+            <div class="tl-content">
+              <div class="tl-label dim" id="tl-label-1">Проверка заявки</div>
+              <div class="tl-sub" id="tl-sub-1">Ожидание</div>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="tl-icon-wrap">
+              <div class="tl-icon" id="tl-mod-2">3</div>
+              <div class="tl-line" id="tl-line-2"></div>
+            </div>
+            <div class="tl-content">
+              <div class="tl-label dim" id="tl-label-2">Подбор подходящего товара</div>
+              <div class="tl-sub" id="tl-sub-2">Ожидание</div>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="tl-icon-wrap">
+              <div class="tl-icon" id="tl-mod-3">4</div>
+            </div>
+            <div class="tl-content">
+              <div class="tl-label dim" id="tl-label-3">Готово для публикации</div>
+              <div class="tl-sub" id="tl-sub-3">Ожидание</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="mod-wish-summary" class="card" style="display:none;">
+        <div class="section-label" style="margin-bottom:10px;">Ваше желание</div>
+        <div id="mod-wish-content"></div>
+      </div>
+
+      <div id="mod-product-wrap" class="product-card" style="display:none;">
+        <div style="display:flex; align-items:center; gap:6px; margin-bottom:12px;">
+          <span class="section-label">Подобранный товар</span>
+          <span class="badge badge-teal">✓ Найден</span>
+        </div>
+        <div class="product-header">
+          <div class="product-icon" id="mod-product-icon">📦</div>
+          <div>
+            <div class="product-name" id="mod-product-name">—</div>
+            <div class="product-desc" id="mod-product-desc">—</div>
+          </div>
+        </div>
+        <div class="product-footer">
+          <div class="product-price" id="mod-product-price">—</div>
+          <div class="marketplace-badge">🛒 Маркетплейс</div>
+        </div>
+      </div>
+    </div>
+    <div class="bottom-actions">
+      <button class="btn btn-primary btn-full" id="mod-btn" style="opacity:.4; pointer-events:none;" onclick="goTo('catalog')">
+        Посмотреть как это увидит даритель →
+      </button>
+    </div>
+  </div>
+
+  <!-- ══════════════════ SCREEN 4: DONOR CATALOG ══════════════════ -->
+  <div id="screen-catalog" class="screen">
+    <div class="top-bar">
+      <button class="back-btn" onclick="goTo('welcome')" aria-label="Назад">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M5 12l7-7M5 12l7 7"/></svg>
+      </button>
+      <span class="title">Каталог желаний</span>
+      <span class="badge badge-blue" id="catalog-count">6</span>
+    </div>
+    <div class="screen-body" style="gap:12px;">
+      <div class="search-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input class="form-input search-input" id="search-input" type="text" placeholder="Поиск по имени, категории..." oninput="filterCatalog()">
+      </div>
+      <div class="chips" id="filter-chips">
+        <div class="chip active" data-filter="all" onclick="setFilter(this,'all')">Все</div>
+        <div class="chip" data-filter="1000" onclick="setFilter(this,'1000')">До 1 000 ₽</div>
+        <div class="chip" data-filter="3000" onclick="setFilter(this,'3000')">До 3 000 ₽</div>
+        <div class="chip" data-filter="5000" onclick="setFilter(this,'5000')">До 5 000 ₽</div>
+        <div class="chip" data-filter="gratitude" onclick="setFilter(this,'gratitude')">Благодарность доступна</div>
+      </div>
+      <div id="catalog-grid" class="anim-stagger" style="display:flex; flex-direction:column; gap:12px;"></div>
+      <div id="catalog-empty" class="empty-state" style="display:none;">
+        <div class="empty-state-icon">🔍</div>
+        <div class="empty-state-text">Ничего не найдено. Попробуйте изменить запрос или фильтры.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ SCREEN 5: WISH DETAILS ══════════════════ -->
+  <div id="screen-details" class="screen">
+    <div class="top-bar">
+      <button class="back-btn" onclick="goTo('catalog')" aria-label="Назад">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M5 12l7-7M5 12l7 7"/></svg>
+      </button>
+      <span class="title">Желание ребёнка</span>
+      <span class="badge badge-green" style="font-size:11px;">✓ Проверено</span>
+    </div>
+    <div class="screen-body" id="details-body" style="gap:16px;"></div>
+    <div class="bottom-actions">
+      <button class="btn btn-primary btn-full" onclick="goTo('payment')">Оплатить подарок 🎁</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════ SCREEN 6: PAYMENT ══════════════════ -->
+  <div id="screen-payment" class="screen">
+    <div class="top-bar">
+      <button class="back-btn" onclick="goTo('details')" aria-label="Назад">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M5 12l7-7M5 12l7 7"/></svg>
+      </button>
+      <span class="title">Оплата подарка</span>
+    </div>
+    <div class="screen-body" id="payment-body" style="gap:16px;"></div>
+    <div class="bottom-actions">
+      <button class="btn btn-primary btn-full" id="pay-btn" onclick="confirmPayment()">Подтвердить оплату</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════ SCREEN 7: TRACKING ══════════════════ -->
+  <div id="screen-tracking" class="screen">
+    <div class="top-bar">
+      <div class="logo-mark"><span>✦</span></div>
+      <span class="title">Отслеживание</span>
+    </div>
+    <div class="screen-body" id="tracking-body" style="gap:16px;"></div>
+    <div class="bottom-actions" id="tracking-actions"></div>
+  </div>
+
+  <!-- ══════════════════ SCREEN 8: FINAL RESULT ══════════════════ -->
+  <div id="screen-result" class="screen">
+    <div class="screen-body" id="result-body" style="gap:18px; padding-top:28px;"></div>
+    <div class="bottom-actions" id="result-actions"></div>
+  </div>
+
+</div>
+
+<!-- ══════════════════ MODAL ══════════════════ -->
+<div class="modal-overlay hidden" id="gratitude-modal" onclick="closeModal(event)">
+  <div class="modal-box" style="position:relative;">
+    <div class="modal-handle"></div>
+    <button class="modal-close" onclick="document.getElementById('gratitude-modal').classList.add('hidden')" aria-label="Закрыть">×</button>
+    <div style="text-align:center; margin-bottom:16px;">
+      <div style="font-size:32px; margin-bottom:8px;">💌</div>
+      <div style="font-size:18px; font-weight:800; color:var(--gray-900); margin-bottom:4px;">Благодарность от ребёнка</div>
+      <div style="font-size:13px; color:var(--gray-500);">Голосовое сообщение · 0:23</div>
+    </div>
+    <div style="background:var(--gray-100); border-radius:var(--radius-md); padding:16px; margin-bottom:16px; display:flex; align-items:center; gap:12px;">
+      <button style="width:44px; height:44px; border-radius:50%; background:var(--blue); border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0;" onclick="this.textContent = this.textContent==='▶'?'⏸':'▶'">
+        <span style="color:#fff; font-size:16px; margin-left:2px;">▶</span>
+      </button>
+      <div style="flex:1;">
+        <div style="height:4px; background:var(--gray-300); border-radius:2px; overflow:hidden; margin-bottom:4px;">
+          <div style="width:0%; height:100%; background:var(--blue); border-radius:2px;" id="audio-progress"></div>
+        </div>
+        <div style="font-size:11px; color:var(--gray-400);">0:00 / 0:23</div>
+      </div>
+    </div>
+    <div class="gratitude-card" style="margin-bottom:16px;">
+      <div class="gratitude-title">💬 Текст сообщения</div>
+      <div class="gratitude-msg" id="modal-gratitude-text">«Спасибо большое за такой чудесный подарок! Я так давно об этом мечтал(а). Вы сделали меня очень счастливым(ой)!»</div>
+    </div>
+    <button class="btn btn-ghost btn-full" onclick="document.getElementById('gratitude-modal').classList.add('hidden')">Закрыть</button>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════════
+   STATE
+════════════════════════════════════════════ */
+const state = {
+  role: null,
+  selectedBudget: null,
+  selectedWish: null,
+  selectedPayMethod: 'card',
+  anonymous: false,
+  trackingStep: 0,
+  createdWish: null,
+  catalogFilter: 'all',
+  catalogSearch: '',
+  formValues: {}
+};
+
+/* ════════════════════════════════════════════
+   DEMO DATA
+════════════════════════════════════════════ */
+const COLORS = ['av-blue','av-teal','av-amber','av-violet','av-rose','av-green'];
+const ICONS = {
+  'творчество':'🎨','спорт':'⚽','обучение':'📚','игры':'🎮','одежда':'👕','другое':'✨'
+};
+
+const demoWishes = [
+  {
+    id:1, name:'Маша', age:9, city:'Москва', category:'творчество',
+    wish:'Набор для рисования и скетчинга',
+    reason:'Маша обожает рисовать, но у неё нет качественных материалов. Она мечтает создавать красивые картины и развивать свой талант.',
+    budget:3000, gratitude:true, color:'av-rose',
+    product:{ name:'Набор для скетчинга Derwent 36 цветов', desc:'Профессиональные акварельные карандаши + альбом А4 + 3 кисти', price:2850, icon:'🎨' }
+  },
+  {
+    id:2, name:'Артём', age:11, city:'Санкт-Петербург', category:'спорт',
+    wish:'Футбольный мяч Nike',
+    reason:'Артём занимается в дворовой команде, но мяч давно пришёл в негодность. Тренер говорит, что у него хорошие данные.',
+    budget:3000, gratitude:true, color:'av-blue',
+    product:{ name:'Футбольный мяч Nike Strike', desc:'Размер 5, сертифицирован FIFA, усиленное покрытие', price:2490, icon:'⚽' }
+  },
+  {
+    id:3, name:'Дима', age:8, city:'Новосибирск', category:'игры',
+    wish:'Конструктор LEGO Technic',
+    reason:'Дима интересуется механикой и инженерией. LEGO поможет развить пространственное мышление и творческие навыки.',
+    budget:5000, gratitude:false, color:'av-amber',
+    product:{ name:'LEGO Technic 42143 Ferrari Daytona', desc:'738 деталей, движущиеся части, подвеска', price:4790, icon:'🧱' }
+  },
+  {
+    id:4, name:'Аня', age:13, city:'Казань', category:'одежда',
+    wish:'Тёплая зимняя куртка',
+    reason:'Аня из многодетной семьи. Старая куртка стала мала, и ей холодно ходить в школу в морозы.',
+    budget:5000, gratitude:true, color:'av-violet',
+    product:{ name:'Зимняя куртка Columbia Arctic Blast', desc:'Наполнитель 250г, мембрана Omni-Heat, до -25°C, рост 158-164', price:4950, icon:'🧥' }
+  },
+  {
+    id:5, name:'Саша', age:10, city:'Екатеринбург', category:'обучение',
+    wish:'Книги и настольная лампа для учёбы',
+    reason:'Саша очень любит читать, но книг дома почти нет, а освещение плохое. Хочет стать учёным.',
+    budget:3000, gratitude:false, color:'av-teal',
+    product:{ name:'Набор "Юный учёный" + LED-лампа Baseus', desc:'5 книг серии "Большая наука" + лампа с регулировкой яркости', price:2780, icon:'📚' }
+  },
+  {
+    id:6, name:'Кирилл', age:14, city:'Воронеж', category:'обучение',
+    wish:'Наушники для дистанционного обучения',
+    reason:'Кирилл учится онлайн, но дешёвые наушники сломались. Без хорошего звука сложно воспринимать уроки.',
+    budget:5000, gratitude:true, color:'av-green',
+    product:{ name:'Беспроводные наушники JBL Tune 520BT', desc:'Bluetooth 5.3, 57 часов работы, шумоподавление', price:3990, icon:'🎧' }
+  }
+];
+
+let catalogItems = [...demoWishes];
+
+/* ════════════════════════════════════════════
+   NAVIGATION
+════════════════════════════════════════════ */
+function goTo(screenId) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const target = document.getElementById('screen-' + screenId);
+  if (target) target.classList.add('active');
+  target && target.scrollTop && (target.scrollTop = 0);
+  const body = target && target.querySelector('.screen-body');
+  if (body) body.scrollTop = 0;
+}
+
+function startDonor() {
+  state.role = 'donor';
+  renderCatalog();
+  goTo('catalog');
+}
+
+function startWisher() {
+  state.role = 'wisher';
+  goTo('create');
+}
+
+/* ════════════════════════════════════════════
+   WISH CREATION
+════════════════════════════════════════════ */
+function selectBudget(btn) {
+  document.querySelectorAll('#budget-group .seg-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  state.selectedBudget = parseInt(btn.dataset.val);
+  updateProgress();
+}
+
+function updateProgress() {
+  const fields = ['f-name','f-age','f-city','f-category','f-wish'];
+  const filled = fields.filter(id => document.getElementById(id).value.trim()).length;
+  const hasBudget = state.selectedBudget ? 1 : 0;
+  const pct = Math.round(((filled + hasBudget) / 6) * 100);
+  document.getElementById('create-progress').style.width = pct + '%';
+}
+
+function submitWish() {
+  const name = document.getElementById('f-name').value.trim();
+  const age = document.getElementById('f-age').value.trim();
+  const city = document.getElementById('f-city').value.trim();
+  const category = document.getElementById('f-category').value;
+  const wish = document.getElementById('f-wish').value.trim();
+  const reason = document.getElementById('f-reason').value.trim();
+  const gratitude = document.getElementById('f-gratitude').checked;
+
+  let valid = true;
+  [['err-name',name],['err-age',age],['err-city',city],['err-category',category],['err-wish',wish]].forEach(([id,val])=>{
+    const el = document.getElementById(id);
+    if (!val) { el.classList.add('show'); valid = false; }
+    else el.classList.remove('show');
+  });
+  const errBudget = document.getElementById('err-budget');
+  if (!state.selectedBudget) { errBudget.classList.add('show'); valid = false; }
+  else errBudget.classList.remove('show');
+  if (!valid) return;
+
+  const ageNum = parseInt(age);
+  const matchedProduct = guessProduct(category, wish, state.selectedBudget);
+
+  const newWish = {
+    id: Date.now(), name, age: ageNum, city, category, wish, reason,
+    budget: state.selectedBudget, gratitude, color: COLORS[Math.floor(Math.random()*COLORS.length)],
+    product: matchedProduct, isNew: true
+  };
+  state.createdWish = newWish;
+  catalogItems.unshift(newWish);
+
+  renderModerationScreen(newWish, matchedProduct);
+  goTo('moderation');
+  runModeration();
+}
+
+function guessProduct(category, wish, budget) {
+  const templates = {
+    'творчество': { name:'Набор для творчества Premium', desc:'Краски, кисти, альбом, мелки', icon:'🎨' },
+    'спорт': { name:'Спортивный инвентарь', desc:'Профессиональное качество для юных спортсменов', icon:'⚽' },
+    'обучение': { name:'Обучающий набор', desc:'Книги, материалы, инструменты для учёбы', icon:'📚' },
+    'игры': { name:'Игровой набор', desc:'Развивающие и развлекательные материалы', icon:'🎮' },
+    'одежда': { name:'Детская одежда', desc:'Тёплая, качественная, по сезону', icon:'👕' },
+    'другое': { name:'Специальный подарок', desc:'Подобрано под желание ребёнка', icon:'✨' }
+  };
+  const t = templates[category] || templates['другое'];
+  const price = Math.round(budget * 0.85);
+  return { name: t.name, desc: t.desc, price, icon: t.icon };
+}
+
+function renderModerationScreen(wish, product) {
+  const wishContent = document.getElementById('mod-wish-content');
+  wishContent.innerHTML = `
+    <div class="info-row"><span class="info-label">Имя</span><span class="info-value">${wish.name}, ${wish.age} лет</span></div>
+    <div class="info-row"><span class="info-label">Город</span><span class="info-value">${wish.city}</span></div>
+    <div class="info-row"><span class="info-label">Категория</span><span class="info-value">${ICONS[wish.category]||'✨'} ${wish.category}</span></div>
+    <div class="info-row"><span class="info-label">Желание</span><span class="info-value">${wish.wish}</span></div>
+    <div class="info-row"><span class="info-label">Бюджет</span><span class="info-value">до ${wish.budget.toLocaleString('ru')} ₽</span></div>
+  `;
+  document.getElementById('mod-product-name').textContent = product.name;
+  document.getElementById('mod-product-desc').textContent = product.desc;
+  document.getElementById('mod-product-price').textContent = product.price.toLocaleString('ru') + ' ₽';
+  document.getElementById('mod-product-icon').textContent = product.icon;
+}
+
+function runModeration() {
+  const steps = [
+    { icon: 'tl-mod-1', line: 'tl-line-1', label: 'tl-label-1', sub: 'tl-sub-1', subText: 'Проверка прошла успешно' },
+    { icon: 'tl-mod-2', line: 'tl-line-2', label: 'tl-label-2', sub: 'tl-sub-2', subText: 'Товар найден на Ozon' },
+    { icon: 'tl-mod-3', label: 'tl-label-3', sub: 'tl-sub-3', subText: 'Желание опубликовано' }
+  ];
+  let idx = 0;
+  const advance = () => {
+    if (idx >= steps.length) {
+      document.getElementById('mod-badge').textContent = '✓ Опубликовано';
+      document.getElementById('mod-badge').classList.add('done');
+      document.getElementById('mod-wish-summary').style.display = 'block';
+      document.getElementById('mod-product-wrap').style.display = 'block';
+      const btn = document.getElementById('mod-btn');
+      btn.style.opacity = '1'; btn.style.pointerEvents = 'auto';
+      return;
+    }
+    const s = steps[idx];
+    const iconEl = document.getElementById(s.icon);
+    iconEl.className = 'tl-icon active';
+    iconEl.textContent = (idx+2);
+    setTimeout(() => {
+      iconEl.className = 'tl-icon done';
+      iconEl.textContent = '✓';
+      if (s.line) { const l = document.getElementById(s.line); l.classList.add('done'); }
+      document.getElementById(s.label).classList.remove('dim');
+      document.getElementById(s.sub).textContent = s.subText;
+      idx++;
+      setTimeout(advance, 900);
+    }, 800);
+  };
+  setTimeout(advance, 600);
+}
+
+/* ════════════════════════════════════════════
+   CATALOG
+════════════════════════════════════════════ */
+function setFilter(el, filter) {
+  document.querySelectorAll('#filter-chips .chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  state.catalogFilter = filter;
+  filterCatalog();
+}
+
+function filterCatalog() {
+  state.catalogSearch = document.getElementById('search-input').value.toLowerCase();
+  renderCatalog();
+}
+
+function renderCatalog() {
+  const grid = document.getElementById('catalog-grid');
+  const empty = document.getElementById('catalog-empty');
+  const { catalogFilter: f, catalogSearch: q } = state;
+
+  const filtered = catalogItems.filter(w => {
+    const matchSearch = !q || w.name.toLowerCase().includes(q) || w.category.toLowerCase().includes(q) || w.wish.toLowerCase().includes(q) || w.city.toLowerCase().includes(q);
+    const matchFilter = f === 'all' ||
+      (f === '1000' && w.budget <= 1000) ||
+      (f === '3000' && w.budget <= 3000) ||
+      (f === '5000' && w.budget <= 5000) ||
+      (f === 'gratitude' && w.gratitude);
+    return matchSearch && matchFilter;
+  });
+
+  document.getElementById('catalog-count').textContent = filtered.length;
+
+  if (!filtered.length) {
+    grid.style.display = 'none';
+    empty.style.display = 'block';
+    return;
+  }
+  grid.style.display = 'flex';
+  empty.style.display = 'none';
+
+  grid.innerHTML = filtered.map(w => `
+    <div class="wish-card" onclick="selectWish(${w.id})">
+      <div class="wish-card-top">
+        <div class="wish-avatar ${w.color}">${w.name[0]}</div>
+        <div class="wish-card-meta">
+          <div class="wish-card-name">${w.name}, ${w.age} лет</div>
+          <div class="wish-card-sub">${w.city} · ${ICONS[w.category]||'✨'} ${w.category}</div>
+        </div>
+        ${w.isNew ? '<span class="badge badge-teal">Новое</span>' : ''}
+      </div>
+      <div class="wish-card-desc">${w.wish}</div>
+      <div class="wish-card-footer">
+        <div class="wish-price">${w.product.price.toLocaleString('ru')} ₽</div>
+        <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; justify-content:flex-end;">
+          <span class="badge badge-green">✓ Проверено</span>
+          ${w.gratitude ? '<span class="badge badge-amber">💌 Благодарность</span>' : ''}
+        </div>
+      </div>
+      <div style="margin-top:12px;">
+        <button class="btn btn-primary btn-full btn-sm" onclick="event.stopPropagation(); selectWish(${w.id})">Исполнить желание →</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ════════════════════════════════════════════
+   WISH DETAILS
+════════════════════════════════════════════ */
+function selectWish(id) {
+  const wish = catalogItems.find(w => w.id === id);
+  if (!wish) return;
+  state.selectedWish = wish;
+  renderDetails(wish);
+  goTo('details');
+}
+
+function renderDetails(w) {
+  const body = document.getElementById('details-body');
+  body.innerHTML = `
+    <div class="card" style="padding:20px;">
+      <div style="display:flex; align-items:center; gap:14px; margin-bottom:16px;">
+        <div class="wish-avatar ${w.color}" style="width:56px;height:56px;border-radius:18px;font-size:22px;">${w.name[0]}</div>
+        <div>
+          <div style="font-size:18px;font-weight:800;color:var(--gray-900);">${w.name}</div>
+          <div style="font-size:14px;color:var(--gray-500);">${w.age} лет · ${w.city}</div>
+          <div style="margin-top:4px;"><span class="badge badge-blue">${ICONS[w.category]||'✨'} ${w.category}</span></div>
+        </div>
+      </div>
+      <hr class="divider" style="margin-bottom:14px;">
+      <div style="font-size:15px;font-weight:700;color:var(--gray-900);margin-bottom:6px;">💭 Желание</div>
+      <div style="font-size:14px;color:var(--gray-700);line-height:1.6;margin-bottom:14px;">${w.wish}</div>
+      ${w.reason ? `<div style="font-size:13px;color:var(--gray-500);line-height:1.6;background:var(--gray-100);border-radius:12px;padding:12px;">${w.reason}</div>` : ''}
+    </div>
+
+    <div class="product-card">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+        <span class="section-label">Подходящий товар</span>
+        <span class="badge badge-teal">✓ Подобрано</span>
+      </div>
+      <div class="product-header">
+        <div class="product-icon">${w.product.icon}</div>
+        <div>
+          <div class="product-name">${w.product.name}</div>
+          <div class="product-desc">${w.product.desc}</div>
+        </div>
+      </div>
+      <div class="product-footer">
+        <div class="product-price">${w.product.price.toLocaleString('ru')} ₽</div>
+        <div class="marketplace-badge">🛒 Найдено на маркетплейсе</div>
+      </div>
+    </div>
+
+    <div class="transp-block">
+      <div style="font-size:13px;font-weight:700;color:var(--blue);margin-bottom:4px;">🔍 Прозрачность операции</div>
+      <div class="transp-row">
+        <div class="transp-icon">✓</div>
+        <div class="transp-text">Желание прошло проверку команды</div>
+      </div>
+      <div class="transp-row">
+        <div class="transp-icon">🛍</div>
+        <div class="transp-text">Товар подобран точно под запрос</div>
+      </div>
+      <div class="transp-row">
+        <div class="transp-icon">📦</div>
+        <div class="transp-text">Доставка организуется командой проекта</div>
+      </div>
+      ${w.gratitude ? `<div class="transp-row"><div class="transp-icon">💌</div><div class="transp-text">Ребёнок хочет передать благодарность</div></div>` : ''}
+    </div>
+  `;
+  renderPaymentScreen(w);
+}
+
+/* ════════════════════════════════════════════
+   PAYMENT
+════════════════════════════════════════════ */
+function renderPaymentScreen(w) {
+  const body = document.getElementById('payment-body');
+  body.innerHTML = `
+    <div class="card" style="padding:18px;">
+      <div class="section-label" style="margin-bottom:12px;">Ваш заказ</div>
+      <div class="info-row">
+        <span class="info-label">Получатель</span>
+        <span class="info-value">${w.name}, ${w.age} лет · ${w.city}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Подарок</span>
+        <span class="info-value">${w.product.name}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Стоимость</span>
+        <span class="info-value">${w.product.price.toLocaleString('ru')} ₽</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Статус</span>
+        <span class="info-value" style="color:var(--green);">✓ Доставка включена</span>
+      </div>
+      <hr class="divider">
+      <div class="total-row">
+        <span class="total-label">Итого</span>
+        <span class="total-value">${w.product.price.toLocaleString('ru')} ₽</span>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div class="section-label">Способ оплаты</div>
+      <div class="pay-option selected" id="pay-card" onclick="selectPayMethod('card')">
+        <div class="pay-option-icon">💳</div>
+        <div class="pay-option-label">Банковская карта</div>
+        <div class="pay-radio" id="radio-card"></div>
+      </div>
+      <div class="pay-option" id="pay-sbp" onclick="selectPayMethod('sbp')">
+        <div class="pay-option-icon" style="background:var(--teal-light);">⚡</div>
+        <div class="pay-option-label">СБП (Система быстрых платежей)</div>
+        <div class="pay-radio" id="radio-sbp"></div>
+      </div>
+      <div class="pay-option" id="pay-digital" onclick="selectPayMethod('digital')">
+        <div class="pay-option-icon" style="background:#1a1917;">🍎</div>
+        <div class="pay-option-label">Apple Pay / Google Pay</div>
+        <div class="pay-radio" id="radio-digital"></div>
+      </div>
+    </div>
+
+    <div class="card" style="padding:16px;display:flex;flex-direction:column;gap:14px;">
+      <div class="toggle-row">
+        <span class="toggle-label">Остаться анонимным дарителем</span>
+        <button class="toggle ${state.anonymous?'on':''}" id="anon-toggle" onclick="toggleAnon()" aria-label="Анонимность"></button>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="pay-msg">Сообщение команде проекта (необязательно)</label>
+        <textarea class="form-textarea" id="pay-msg" placeholder="Например, пожелания или особые инструкции..." style="min-height:70px;"></textarea>
+      </div>
+    </div>
+  `;
+}
+
+function selectPayMethod(method) {
+  state.selectedPayMethod = method;
+  ['card','sbp','digital'].forEach(m => {
+    document.getElementById('pay-'+m).classList.toggle('selected', m === method);
+    const r = document.getElementById('radio-'+m);
+    r.style.borderColor = m === method ? 'var(--blue)' : '';
+  });
+}
+
+function toggleAnon() {
+  state.anonymous = !state.anonymous;
+  const t = document.getElementById('anon-toggle');
+  t.classList.toggle('on', state.anonymous);
+}
+
+function confirmPayment() {
+  const btn = document.getElementById('pay-btn');
+  btn.innerHTML = '<div class="spinner"></div>';
+  btn.disabled = true;
+  setTimeout(() => {
+    state.trackingStep = 0;
+    renderTracking();
+    goTo('tracking');
+  }, 1800);
+}
+
+/* ════════════════════════════════════════════
+   TRACKING
+════════════════════════════════════════════ */
+const trackingSteps = [
+  { label: 'Оплата подтверждена', sub: 'Средства получены', icon: '💳' },
+  { label: 'Товар выкуплен', sub: 'Заказ оформлен на маркетплейсе', icon: '🛒' },
+  { label: 'Передан в доставку', sub: 'Курьерская служба принята', icon: '🚚' },
+  { label: 'Вручён ребёнку', sub: 'Желание исполнено!', icon: '🎉' }
+];
+
+function renderTracking() {
+  const w = state.selectedWish;
+  const s = state.trackingStep;
+  const body = document.getElementById('tracking-body');
+  const actions = document.getElementById('tracking-actions');
+
+  body.innerHTML = `
+    <div class="success-banner">
+      <div class="success-banner-icon">✓</div>
+      <div>
+        <div class="success-banner-title">Подарок оплачен!</div>
+        <div class="success-banner-sub">Команда уже начала работу над доставкой</div>
+      </div>
+    </div>
+
+    <div class="card" style="padding:18px;">
+      <div class="section-label" style="margin-bottom:14px;">Статус доставки</div>
+      <div class="timeline" id="tracking-timeline">${renderTrackingTimeline(s)}</div>
+    </div>
+
+    <div class="card" style="padding:16px;background:var(--gray-100);border-color:var(--gray-200);">
+      <div class="section-label" style="margin-bottom:10px;">Детали заказа</div>
+      <div class="info-row"><span class="info-label">Кому</span><span class="info-value">${w.name}, ${w.age} лет · ${w.city}</span></div>
+      <div class="info-row"><span class="info-label">Что</span><span class="info-value">${w.product.name}</span></div>
+      <div class="info-row"><span class="info-label">Сумма</span><span class="info-value">${w.product.price.toLocaleString('ru')} ₽</span></div>
+      ${w.gratitude ? '<div class="info-row"><span class="info-label">Благодарность</span><span class="info-value" style="color:var(--amber);">💌 Будет отправлена</span></div>' : ''}
+    </div>
+  `;
+
+  const allDone = s >= trackingSteps.length;
+  if (allDone) {
+    actions.innerHTML = '';
+    setTimeout(() => { renderResult(); goTo('result'); }, 700);
+    return;
+  }
+  actions.innerHTML = `
+    <button class="btn btn-primary btn-full" onclick="advanceTracking()">Симулировать следующий этап →</button>
+    <button class="btn btn-ghost btn-full" onclick="skipToResult()">Сразу показать финальный результат</button>
+  `;
+}
+
+function renderTrackingTimeline(currentStep) {
+  return trackingSteps.map((s, i) => {
+    const done = i < currentStep;
+    const active = i === currentStep;
+    const dim = i > currentStep;
+    const iconClass = done ? 'done' : active ? 'active' : '';
+    const lineClass = done ? 'done' : '';
+    const labelClass = dim ? 'dim' : '';
+    const icon = done ? '✓' : (active ? s.icon : (i+1));
+    return `
+      <div class="timeline-item">
+        <div class="tl-icon-wrap">
+          <div class="tl-icon ${iconClass}">${icon}</div>
+          ${i < trackingSteps.length-1 ? `<div class="tl-line ${lineClass}"></div>` : ''}
+        </div>
+        <div class="tl-content">
+          <div class="tl-label ${labelClass}">${s.label}</div>
+          <div class="tl-sub">${done ? s.sub : (active ? 'В процессе...' : 'Ожидание')}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function advanceTracking() {
+  state.trackingStep++;
+  renderTracking();
+}
+
+function skipToResult() {
+  state.trackingStep = trackingSteps.length;
+  renderResult();
+  goTo('result');
+}
+
+/* ════════════════════════════════════════════
+   RESULT
+════════════════════════════════════════════ */
+function renderResult() {
+  const w = state.selectedWish;
+  const body = document.getElementById('result-body');
+  const actions = document.getElementById('result-actions');
+
+  body.innerHTML = `
+    <div class="result-hero">
+      <div class="check-circle">
+        <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M8 18L15 25L28 11" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div style="font-size:24px;font-weight:800;color:var(--gray-900);letter-spacing:-.02em;">Желание исполнено!</div>
+      <div style="font-size:14px;color:var(--gray-500);max-width:270px;line-height:1.5;">Подарок успешно вручён ${w.name}. Спасибо, что делаете мир добрее.</div>
+    </div>
+
+    <div class="card" style="padding:18px;">
+      <div class="section-label" style="margin-bottom:12px;">Итоги</div>
+      <div class="info-row"><span class="info-label">Кому помогли</span><span class="info-value">${w.name}, ${w.age} лет · ${w.city}</span></div>
+      <div class="info-row"><span class="info-label">Подарок</span><span class="info-value">${w.product.name}</span></div>
+      <div class="info-row"><span class="info-label">Сумма</span><span class="info-value">${w.product.price.toLocaleString('ru')} ₽</span></div>
+      <div class="info-row"><span class="info-label">Статус</span><span class="info-value" style="color:var(--green);">✓ Вручено</span></div>
+    </div>
+
+    ${w.gratitude ? `
+    <div class="gratitude-card">
+      <div class="gratitude-title">💌 Спасибо за подарок!</div>
+      <div class="gratitude-msg">${getGratitudeText(w.name, w.wish)}</div>
+      <button class="btn btn-full" style="background:var(--amber);color:#fff;font-size:14px;box-shadow:none;" onclick="openGratitudeModal(${w.id})">
+        🎧 Смотреть благодарность
+      </button>
+    </div>
+    ` : ''}
+
+    <div style="background:var(--blue-soft);border-radius:var(--radius-md);padding:16px;text-align:center;">
+      <div style="font-size:13px;color:var(--blue);font-weight:600;">🌍 Вы один из <strong>1 247</strong> дарителей, которые меняют жизни детей</div>
+    </div>
+  `;
+
+  actions.innerHTML = `
+    <button class="btn btn-primary btn-full" onclick="goToCatalogFromResult()">Исполнить ещё одно желание 🎁</button>
+    <button class="btn btn-outline btn-full" onclick="goToCreateFromResult()">Добавить новое желание ⭐</button>
+  `;
+}
+
+function getGratitudeText(name, wish) {
+  const texts = [
+    `«Спасибо огромное! Я так счастлив(а)! Это именно то, о чём я мечтал(а). Вы очень добрый человек!»`,
+    `«Большое спасибо за такой замечательный подарок. Я буду им очень дорожить и думать о вашей доброте.»`,
+    `«Не могу поверить, что моё желание исполнилось! Огромное спасибо — вы сделали меня самым счастливым(ой)!»`
+  ];
+  return texts[Math.floor(Math.random() * texts.length)];
+}
+
+function openGratitudeModal(id) {
+  const modal = document.getElementById('gratitude-modal');
+  modal.classList.remove('hidden');
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('gratitude-modal')) {
+    document.getElementById('gratitude-modal').classList.add('hidden');
+  }
+}
+
+function goToCatalogFromResult() {
+  renderCatalog();
+  goTo('catalog');
+}
+
+function goToCreateFromResult() {
+  document.getElementById('f-name').value = '';
+  document.getElementById('f-age').value = '';
+  document.getElementById('f-city').value = '';
+  document.getElementById('f-category').value = '';
+  document.getElementById('f-wish').value = '';
+  document.getElementById('f-reason').value = '';
+  document.getElementById('f-gratitude').checked = false;
+  state.selectedBudget = null;
+  document.querySelectorAll('#budget-group .seg-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('create-progress').style.width = '0%';
+  goTo('create');
+}
+
+/* ════════════════════════════════════════════
+   BOOT
+════════════════════════════════════════════ */
+renderCatalog();
+</script>
+</body>
+</html>
